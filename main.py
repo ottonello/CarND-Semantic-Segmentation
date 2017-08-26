@@ -10,6 +10,7 @@ KEEP_PROB = 0.5
 EPOCHS = 30
 BATCH_SIZE = 8
 LEARNING_RATE = 0.001
+MODEL_VERSION = 1
 
 # Check TensorFlow Version
 assert LooseVersion(tf.__version__) >= LooseVersion('1.0'), 'Please use TensorFlow version 1.0 or newer.  You are using {}'.format(tf.__version__)
@@ -131,6 +132,7 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
     global LEARNING_RATE
     global KEEP_PROB
     sample=0
+    loss_history = []
     for epoch in range(epochs):
         for image, image_c in get_batches_fn(batch_size):
             _,loss = sess.run([train_op, cross_entropy_loss], feed_dict={
@@ -141,11 +143,12 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
             })
             sample = sample + batch_size
         print('Epoch {} of {} - Loss: {}'.format(epoch, epochs, loss))
+        loss_history.append(loss)
+    return loss_history
 tests.test_train_nn(train_nn)
 
-
 def run():
-    global EPOCHS, BATCH_SIZE
+    global EPOCHS, KEEP_PROB, BATCH_SIZE
 
     num_classes = 2
     image_shape = (160, 576)
@@ -180,10 +183,11 @@ def run():
 
         # Train NN using the train_nn function
         sess.run(tf.global_variables_initializer())
-        train_nn(sess, EPOCHS, BATCH_SIZE, get_batches_fn, train_op, cross_entropy_loss, input_image, correct_label, keep_prob, learning_rate)
+        loss_history = train_nn(sess, EPOCHS, BATCH_SIZE, get_batches_fn, train_op, cross_entropy_loss, input_image, correct_label, keep_prob, learning_rate)
 
         # Save inference data using helper.save_inference_samples
-        helper.save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_prob, input_image)
+        output_dir = helper.save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_prob, input_image)
+        helper.save_run_loss_and_parameters(output_dir, loss_history, KEEP_PROB, BATCH_SIZE, EPOCHS, MODEL_VERSION)
 
         # OPTIONAL: Apply the trained model to a video
 

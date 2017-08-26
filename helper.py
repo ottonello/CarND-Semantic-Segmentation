@@ -7,6 +7,7 @@ import shutil
 import zipfile
 import time
 import tensorflow as tf
+import matplotlib.pyplot as plt
 from glob import glob
 from urllib.request import urlretrieve
 from tqdm import tqdm
@@ -138,3 +139,18 @@ def save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_p
         sess, logits, keep_prob, input_image, os.path.join(data_dir, 'data_road/testing'), image_shape)
     for name, image in image_outputs:
         scipy.misc.imsave(os.path.join(output_dir, name), image)
+    return output_dir
+
+def save_run_loss_and_parameters(output_dir, loss_history, keep_prob, batch_size, epochs, model_version):
+    filename = '_v{}_keep{}_epoch{}_batch'.format(model_version, keep_prob, epochs, batch_size)
+    output_file = os.path.join(output_dir, filename)
+    with open(output_file, 'w') as f:
+        f.write("{},{}\n".format('Epoch','Loss'))
+        for n, l in enumerate(loss_history):
+            f.write("{},{}\n".format(n, l))
+    plt.plot(loss_history)
+    plt.xlabel('epoch')
+    plt.xlabel('loss')
+    plt.grid(True)
+    plt.savefig('_loss_graph.png')
+    plt.show()
