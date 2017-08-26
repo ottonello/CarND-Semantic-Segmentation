@@ -1,0 +1,15 @@
+Loading the model
+
+
+        print(".. load graph ...")
+        image_input, keep_prob, layer3_out, layer4_out, layer7_out = load_vgg(sess, vgg_path)
+
+        # merge all summaries into a single "operation" which we can execute in a session 
+
+        import numpy as np
+        input = np.zeros([1, 160,576,3]) 
+
+        sess.run(tf.global_variables_initializer())
+        layer7_out = sess.run([layer7_out], feed_dict={image_input : input, keep_prob:1})
+
+Output on layer 7 dimensions = 5x18x4096
