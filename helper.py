@@ -152,5 +152,5 @@ def save_run_loss_and_parameters(output_dir, loss_history, keep_prob, batch_size
     plt.xlabel('epoch')
     plt.xlabel('loss')
     plt.grid(True)
-    plt.savefig('_loss_graph.png')
+    plt.savefig(os.path.join(output_dir, '_loss_graph.png'))
     plt.show()
