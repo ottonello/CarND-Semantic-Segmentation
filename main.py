@@ -5,12 +5,13 @@ import helper
 import warnings
 from distutils.version import LooseVersion
 import project_tests as tests
+import numpy as np
 
 KEEP_PROB = 0.5
-EPOCHS = 30
+EPOCHS = 60
 BATCH_SIZE = 8
-LEARNING_RATE = 0.001
-MODEL_VERSION = 1
+LEARNING_RATE = 0.0001
+MODEL_VERSION = 2
 
 # Check TensorFlow Version
 assert LooseVersion(tf.__version__) >= LooseVersion('1.0'), 'Please use TensorFlow version 1.0 or newer.  You are using {}'.format(tf.__version__)
@@ -48,6 +49,8 @@ def load_vgg(sess, vgg_path):
             graph.get_tensor_by_name(vgg_layer7_out_tensor_name)
 tests.test_load_vgg(load_vgg, tf)
 
+def kernel_initializer():
+    return tf.truncated_normal_initializer(stddev=0.01)
 
 def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     """
@@ -59,38 +62,49 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     :return: The Tensor for the last layer of output
     """
     # Input = 160x576x3
-    # Layer 1 = 160x576x64
-    # Layer 2 = 80x288x128
     # Layer 3 = 40x144x256
     # Layer 4 = 20x72x512
-    # Layer 5 = 10x36x512
-    # Layer 6 = 5x18x512
     # Layer 7 = 5x18x4096
-    # Layer 7 output is already a convolution, we can implement the decoder stage directly
 
-    # TODO add skip layers
     upsample_kernel_size = (2,2)
     upsample_stride_size = (2,2)
-    # Decoder layer 1, 5x18xnum_classes
-    decoder_layer_1 = tf.layers.conv2d_transpose(vgg_layer7_out, num_classes, (1,1), (1,1))
 
-    # Decoder layer 2, 10x36xnum_classes
-    decoder_layer_2 = tf.layers.conv2d_transpose(decoder_layer_1, num_classes, upsample_kernel_size, upsample_stride_size)
-    
-    # Decoder layer 3, 20x72xnum_classes
-    decoder_layer_3 = tf.layers.conv2d_transpose(decoder_layer_2, num_classes, upsample_kernel_size, upsample_stride_size)
+    # 1x1 conv layer 7, 5x18xnum_classes
+    layer_7_conv = tf.layers.conv2d_transpose(vgg_layer7_out, num_classes, (1,1), (1,1),kernel_initializer=kernel_initializer())
+    # 1x1 conv layer 4, 10x36xnum_classes
+    layer_4_conv = tf.layers.conv2d_transpose(vgg_layer4_out, num_classes, (1,1), (1,1),kernel_initializer=kernel_initializer())
+    # 1x1 conv layer 3, 20x72xnum_classes
+    layer_3_conv = tf.layers.conv2d_transpose(vgg_layer3_out, num_classes, (1,1), (1,1),kernel_initializer=kernel_initializer())
 
-    # Decoder layer 4, 40x144xnum_classes
-    decoder_layer_4 = tf.layers.conv2d_transpose(decoder_layer_3, num_classes, upsample_kernel_size, upsample_stride_size)
+    print('vgg 3',layer_3_conv.get_shape())
+    print('vgg 4',layer_4_conv.get_shape())
+    print('vgg 7',layer_7_conv.get_shape())
 
-    # Decoder layer 5, 80x288xnum_classes
-    decoder_layer_5 = tf.layers.conv2d_transpose(decoder_layer_4, num_classes, upsample_kernel_size, upsample_stride_size)
+    # Decoder layer 1, 10x36xnum_classes
+    decoder_layer_1 = tf.layers.conv2d_transpose(layer_7_conv, num_classes, upsample_kernel_size, upsample_stride_size,kernel_initializer=kernel_initializer())
+    print('layer 1',decoder_layer_1.get_shape())
 
-    # Decoder layer 6, 160x576xnum_classes
-    decoder_layer_6 = tf.layers.conv2d_transpose(decoder_layer_5, num_classes, upsample_kernel_size, upsample_stride_size)
+    skip1 = tf.add(decoder_layer_1, layer_4_conv)
 
+    # Decoder layer 2, 20x72xnum_classes
+    decoder_layer_2 = tf.layers.conv2d_transpose(skip1, num_classes, upsample_kernel_size, upsample_stride_size,kernel_initializer=kernel_initializer())
+    print('layer 2',decoder_layer_2.get_shape())
 
-    return decoder_layer_6
+    skip2 = tf.add(decoder_layer_2, layer_3_conv)
+
+    # Decoder layer 3, 40x144xnum_classes
+    decoder_layer_3 = tf.layers.conv2d_transpose(skip2, num_classes, upsample_kernel_size, upsample_stride_size,kernel_initializer=kernel_initializer())
+    print('layer 3',decoder_layer_3.get_shape())
+
+    # Decoder layer 4, 80x288xnum_classes
+    decoder_layer_4 = tf.layers.conv2d_transpose(decoder_layer_3, num_classes, upsample_kernel_size, upsample_stride_size,kernel_initializer=kernel_initializer())
+    print('layer 4',decoder_layer_4.get_shape())
+
+    # Decoder layer 5, 160x576xnum_classes
+    decoder_layer_5 = tf.layers.conv2d_transpose(decoder_layer_4, num_classes, upsample_kernel_size, upsample_stride_size,kernel_initializer=kernel_initializer())
+    print('layer 5',decoder_layer_5.get_shape())
+
+    return decoder_layer_5
 tests.test_layers(layers)
 
 

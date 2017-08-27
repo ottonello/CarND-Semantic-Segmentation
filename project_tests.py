@@ -82,13 +82,14 @@ def test_load_vgg(load_vgg, tf_module):
 
 @test_safe
 def test_layers(layers):
+    print('test_layers')
     num_classes = 2
-    vgg_layer3_out = tf.placeholder(tf.float32, [None, None, None, 256])
-    vgg_layer4_out = tf.placeholder(tf.float32, [None, None, None, 512])
-    vgg_layer7_out = tf.placeholder(tf.float32, [None, None, None, 4096])
+    vgg_layer3_out = tf.placeholder(tf.float32, [None, 20, 72, 256])
+    vgg_layer4_out = tf.placeholder(tf.float32, [None, 10, 36, 512])
+    vgg_layer7_out = tf.placeholder(tf.float32, [None, 5, 18, 4096])
     layers_output = layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes)
 
-    _assert_tensor_shape(layers_output, [None, None, None, num_classes], 'Layers Output')
+    _assert_tensor_shape(layers_output, [None, 160, 576, num_classes], 'Layers Output')
 
 
 @test_safe
