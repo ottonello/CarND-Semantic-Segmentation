@@ -5,7 +5,6 @@ import os.path
 import scipy.misc
 import shutil
 import zipfile
-import time
 import tensorflow as tf
 import matplotlib.pyplot as plt
 from glob import glob
@@ -126,9 +125,7 @@ def gen_test_output(sess, logits, keep_prob, image_pl, data_folder, image_shape)
         yield os.path.basename(image_file), np.array(street_im)
 
 
-def save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_prob, input_image):
-    # Make folder for current run
-    output_dir = os.path.join(runs_dir, str(time.time()))
+def save_inference_samples(output_dir, data_dir, sess, image_shape, logits, keep_prob, input_image):
     if os.path.exists(output_dir):
         shutil.rmtree(output_dir)
     os.makedirs(output_dir)
@@ -153,4 +150,4 @@ def save_run_loss_and_parameters(output_dir, loss_history, keep_prob, batch_size
     plt.xlabel('loss')
     plt.grid(True)
     plt.savefig(os.path.join(output_dir, '_loss_graph.png'))
-    plt.show()
+    # plt.show()

@@ -1,5 +1,6 @@
 import sys
 import os.path
+import time
 import tensorflow as tf
 import helper
 import warnings
@@ -8,7 +9,7 @@ import project_tests as tests
 import numpy as np
 
 KEEP_PROB = 0.5
-EPOCHS = 60
+EPOCHS = 30
 BATCH_SIZE = 8
 LEARNING_RATE = 0.0001
 MODEL_VERSION = 2
@@ -70,39 +71,30 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     upsample_stride_size = (2,2)
 
     # 1x1 conv layer 7, 5x18xnum_classes
-    layer_7_conv = tf.layers.conv2d_transpose(vgg_layer7_out, num_classes, (1,1), (1,1),kernel_initializer=kernel_initializer())
+    layer_7_conv = tf.layers.conv2d_transpose(vgg_layer7_out, num_classes, (1,1), (1,1), name='1x1_vgg_7',kernel_initializer=kernel_initializer())
     # 1x1 conv layer 4, 10x36xnum_classes
-    layer_4_conv = tf.layers.conv2d_transpose(vgg_layer4_out, num_classes, (1,1), (1,1),kernel_initializer=kernel_initializer())
+    layer_4_conv = tf.layers.conv2d_transpose(vgg_layer4_out, num_classes, (1,1), (1,1), name='1x1_vgg_4',kernel_initializer=kernel_initializer())
     # 1x1 conv layer 3, 20x72xnum_classes
-    layer_3_conv = tf.layers.conv2d_transpose(vgg_layer3_out, num_classes, (1,1), (1,1),kernel_initializer=kernel_initializer())
-
-    print('vgg 3',layer_3_conv.get_shape())
-    print('vgg 4',layer_4_conv.get_shape())
-    print('vgg 7',layer_7_conv.get_shape())
+    layer_3_conv = tf.layers.conv2d_transpose(vgg_layer3_out, num_classes, (1,1), (1,1), name='1x1_vgg_3',kernel_initializer=kernel_initializer())
 
     # Decoder layer 1, 10x36xnum_classes
-    decoder_layer_1 = tf.layers.conv2d_transpose(layer_7_conv, num_classes, upsample_kernel_size, upsample_stride_size,kernel_initializer=kernel_initializer())
-    print('layer 1',decoder_layer_1.get_shape())
+    decoder_layer_1 = tf.layers.conv2d_transpose(layer_7_conv, num_classes, upsample_kernel_size, upsample_stride_size, name='decoder_1',kernel_initializer=kernel_initializer())
 
     skip1 = tf.add(decoder_layer_1, layer_4_conv)
 
     # Decoder layer 2, 20x72xnum_classes
-    decoder_layer_2 = tf.layers.conv2d_transpose(skip1, num_classes, upsample_kernel_size, upsample_stride_size,kernel_initializer=kernel_initializer())
-    print('layer 2',decoder_layer_2.get_shape())
+    decoder_layer_2 = tf.layers.conv2d_transpose(skip1, num_classes, upsample_kernel_size, upsample_stride_size, name='decoder_2', kernel_initializer=kernel_initializer())
 
     skip2 = tf.add(decoder_layer_2, layer_3_conv)
 
     # Decoder layer 3, 40x144xnum_classes
-    decoder_layer_3 = tf.layers.conv2d_transpose(skip2, num_classes, upsample_kernel_size, upsample_stride_size,kernel_initializer=kernel_initializer())
-    print('layer 3',decoder_layer_3.get_shape())
+    decoder_layer_3 = tf.layers.conv2d_transpose(skip2, num_classes, upsample_kernel_size, upsample_stride_size, name='decoder_3',kernel_initializer=kernel_initializer())
 
     # Decoder layer 4, 80x288xnum_classes
-    decoder_layer_4 = tf.layers.conv2d_transpose(decoder_layer_3, num_classes, upsample_kernel_size, upsample_stride_size,kernel_initializer=kernel_initializer())
-    print('layer 4',decoder_layer_4.get_shape())
+    decoder_layer_4 = tf.layers.conv2d_transpose(decoder_layer_3, num_classes, upsample_kernel_size, upsample_stride_size, name='decoder_4',kernel_initializer=kernel_initializer())
 
     # Decoder layer 5, 160x576xnum_classes
-    decoder_layer_5 = tf.layers.conv2d_transpose(decoder_layer_4, num_classes, upsample_kernel_size, upsample_stride_size,kernel_initializer=kernel_initializer())
-    print('layer 5',decoder_layer_5.get_shape())
+    decoder_layer_5 = tf.layers.conv2d_transpose(decoder_layer_4, num_classes, upsample_kernel_size, upsample_stride_size, name='decoder_5',kernel_initializer=kernel_initializer())
 
     return decoder_layer_5
 tests.test_layers(layers)
@@ -177,6 +169,7 @@ def run():
     # You'll need a GPU with at least 10 teraFLOPS to train on.
     #  https://www.cityscapes-dataset.com/
 
+    print("Start training ---")
     with tf.Session() as sess:
         # Path to vgg model
         vgg_path = os.path.join(data_dir, 'vgg')
@@ -200,8 +193,12 @@ def run():
         loss_history = train_nn(sess, EPOCHS, BATCH_SIZE, get_batches_fn, train_op, cross_entropy_loss, input_image, correct_label, keep_prob, learning_rate)
 
         # Save inference data using helper.save_inference_samples
-        output_dir = helper.save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_prob, input_image)
+        # Make folder for current run
+        output_dir = os.path.join(runs_dir, str(time.time()))
+        helper.save_inference_samples(output_dir, data_dir, sess, image_shape, logits, keep_prob, input_image)
         helper.save_run_loss_and_parameters(output_dir, loss_history, KEEP_PROB, BATCH_SIZE, EPOCHS, MODEL_VERSION)
+        writer = tf.summary.FileWriter(os.path.join(output_dir, 'logs'), sess.graph)            
+        writer.close()
 
         # OPTIONAL: Apply the trained model to a video
 
