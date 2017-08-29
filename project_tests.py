@@ -126,6 +126,8 @@ def test_train_nn(train_nn):
     correct_label = tf.placeholder(tf.float32, name='correct_label')
     keep_prob = tf.placeholder(tf.float32, name='keep_prob')
     learning_rate = tf.placeholder(tf.float32, name='learning_rate')
+    images = tf.placeholder(tf.float32, shape=(None, 160, 576, 3))
+    augment = main.augment_op(images)
     with tf.Session() as sess:
         parameters = {
             'sess': sess,
@@ -137,7 +139,9 @@ def test_train_nn(train_nn):
             'input_image': input_image,
             'correct_label': correct_label,
             'keep_prob': keep_prob,
-            'learning_rate': learning_rate}
+            'learning_rate': learning_rate,
+            'augment': augment,
+            'images': images}
         _prevent_print(train_nn, parameters)
 
 
