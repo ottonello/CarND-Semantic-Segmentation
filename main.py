@@ -1,4 +1,3 @@
-from PIL import Image
 import sys
 import os.path
 import time
@@ -122,11 +121,13 @@ tests.test_optimize(optimize)
 
 def augment_op(images):
     def augment_pipeline(img):
-        rand_bright = tf.image.random_brightness(img, max_delta=28.01, seed=13)
-        rand_flip = tf.image.random_flip_left_right(img, seed=14)
-        rand_contrast = tf.image.random_contrast(rand_flip, lower=0.2, upper=1.1, seed=15)
-        return rand_flip
+        rand_bright = tf.image.random_brightness(img, max_delta=2.01)
+        rand_flip = tf.image.random_flip_left_right(rand_bright)
+        rand_contrast = tf.image.random_contrast(rand_flip, lower=0.2, upper=1.1)
+        
+        return rand_contrast
     return tf.map_fn(lambda img: augment_pipeline(img), images)
+tests.test_augmentation(augment_op)
 
 def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, input_image,
              correct_label, keep_prob, learning_rate, augment, images):
@@ -152,12 +153,6 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
             augmented = sess.run([augment], feed_dict={
                     images: image
                 })
-            if False:
-                Image.fromarray(augmented[0][0].astype('uint8')).show()
-                try:
-                    Image.fromarray(np.asarray(image[0].astype('uint8'))).show()    
-                except Exception:
-                    pass
             _,loss = sess.run([train_op, cross_entropy_loss], feed_dict={
                 input_image: augmented[0],
                 correct_label: image_c,

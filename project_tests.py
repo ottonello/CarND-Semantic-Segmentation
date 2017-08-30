@@ -1,5 +1,7 @@
+from PIL import Image
 import sys
 import os
+import scipy
 from copy import deepcopy
 from glob import glob
 from unittest import mock
@@ -145,7 +147,6 @@ def test_train_nn(train_nn):
         _prevent_print(train_nn, parameters)
         # train_nn(**parameters)
 
-
 @test_safe
 def test_for_kitti_dataset(data_dir):
     kitti_dataset_path = os.path.join(data_dir, 'data_road')
@@ -158,3 +159,26 @@ def test_for_kitti_dataset(data_dir):
     assert training_images_count == 289, 'Expected 289 training images, found {} images.'.format(training_images_count)
     assert training_labels_count == 289, 'Expected 289 training labels, found {} labels.'.format(training_labels_count)
     assert testing_images_count == 290, 'Expected 290 testing images, found {} images.'.format(testing_images_count)
+
+
+@test_safe
+def test_augmentation(augment_op):
+    image_shape = (160, 576)
+    def get_img():
+        img_path = os.path.join('./data', 'data_road/training/image_2/um_000000.png')
+        image = scipy.misc.imresize(scipy.misc.imread(img_path), image_shape)
+        return [image]
+
+    images = tf.placeholder(tf.float32, shape=(None, 160, 576, 3))
+    augment = augment_op(images)
+    with tf.Session() as sess:
+        sess.run(tf.global_variables_initializer())
+        image = get_img()
+        augmented = sess.run([augment], feed_dict={
+            images: image
+        })
+        DEBUG_AUGMENTATION = False
+        if DEBUG_AUGMENTATION:
+            Image.fromarray(image[0]).show(title='Original')
+            Image.fromarray(augmented[0][0].astype('uint8')).show(title='Augmented')
+        # TODO assert output values
