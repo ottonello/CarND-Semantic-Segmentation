@@ -124,9 +124,9 @@ def gen_test_output(sess, logits, keep_prob, image_pl, data_folder, image_shape)
 
         yield os.path.basename(image_file), np.array(street_im)
 
-def process_video(sess, logits, keep_prob, image_pl, image_shape, video_file):
+def process_video(sess, logits, keep_prob, image_pl, image_shape, output_dir, video_file):
     from moviepy.editor import VideoFileClip
-    output_video = "solution_video"+ video_file
+    output_video = os.path.join(output_dir, "solution_video"+ video_file)
 
     def process_image(image):
         image = scipy.misc.imresize(image, image_shape)
@@ -148,10 +148,7 @@ def process_video(sess, logits, keep_prob, image_pl, image_shape, video_file):
 
 
 def save_inference_samples(output_dir, data_dir, sess, image_shape, logits, keep_prob, input_image):
-    if os.path.exists(output_dir):
-        shutil.rmtree(output_dir)
-    os.makedirs(output_dir)
-
+    
     # Run NN on test images and save them to HD
     print('Training Finished. Saving test images to: {}'.format(output_dir))
     image_outputs = gen_test_output(
@@ -161,6 +158,11 @@ def save_inference_samples(output_dir, data_dir, sess, image_shape, logits, keep
     return output_dir
 
 def save_run_loss_and_parameters(output_dir, loss_history, keep_prob, batch_size, epochs, model_version):
+    if os.path.exists(output_dir):
+        shutil.rmtree(output_dir)
+    os.makedirs(output_dir)
+
+    
     filename = '_v{}_keep{}_epoch{}_batch'.format(model_version, keep_prob, epochs, batch_size)
     output_file = os.path.join(output_dir, filename)
     with open(output_file, 'w') as f:
