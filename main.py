@@ -9,10 +9,10 @@ import project_tests as tests
 import numpy as np
 
 KEEP_PROB = 0.5
-EPOCHS = 40
+EPOCHS = 20
 BATCH_SIZE = 8
 LEARNING_RATE = 0.0001
-MODEL_VERSION = 2
+MODEL_VERSION = 3
 
 # Check TensorFlow Version
 assert LooseVersion(tf.__version__) >= LooseVersion('1.0'), 'Please use TensorFlow version 1.0 or newer.  You are using {}'.format(tf.__version__)
@@ -87,14 +87,8 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
 
     skip2 = tf.add(decoder_layer_2, layer_3_conv)
 
-    # Decoder layer 3, 40x144xnum_classes
-    decoder_layer_3 = tf.layers.conv2d_transpose(skip2, num_classes, upsample_kernel_size, upsample_stride_size, name='decoder_3',kernel_initializer=kernel_initializer())
-
-    # Decoder layer 4, 80x288xnum_classes
-    decoder_layer_4 = tf.layers.conv2d_transpose(decoder_layer_3, num_classes, upsample_kernel_size, upsample_stride_size, name='decoder_4',kernel_initializer=kernel_initializer())
-
     # Decoder layer 5, 160x576xnum_classes
-    decoder_layer_5 = tf.layers.conv2d_transpose(decoder_layer_4, num_classes, upsample_kernel_size, upsample_stride_size, name='decoder_5',kernel_initializer=kernel_initializer())
+    decoder_layer_5 = tf.layers.conv2d_transpose(skip2, num_classes, (16,16), (8,8), padding='same', name='decoder_5',kernel_initializer=kernel_initializer())
 
     return decoder_layer_5
 tests.test_layers(layers)
@@ -121,11 +115,11 @@ tests.test_optimize(optimize)
 
 def augment_op(images):
     def augment_pipeline(img):
-        rand_bright = tf.image.random_brightness(img, max_delta=2.01)
-        rand_flip = tf.image.random_flip_left_right(rand_bright)
-        rand_contrast = tf.image.random_contrast(rand_flip, lower=0.2, upper=1.1)
+        rand_flip = tf.image.random_flip_left_right(img, seed=13)
+        # rand_bright = tf.image.random_brightness(rand_flip, max_delta=2.01)
+        # rand_contrast = tf.image.random_contrast(rand_bright, lower=0.2, upper=1.1)
         
-        return rand_contrast
+        return rand_flip
     return tf.map_fn(lambda img: augment_pipeline(img), images)
 tests.test_augmentation(augment_op)
 
@@ -152,7 +146,7 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
         for image, image_c in get_batches_fn(batch_size):
             augmented = sess.run([augment], feed_dict={
                     images: image
-                })
+            })
             _,loss = sess.run([train_op, cross_entropy_loss], feed_dict={
                 input_image: augmented[0],
                 correct_label: image_c,
