@@ -116,8 +116,8 @@ def test_train_nn(train_nn):
     epochs = 1
     batch_size = 2
 
-    def get_batches_fn(batach_size_parm):
-        shape = [batach_size_parm, 2, 3, 3]
+    def get_batches_fn(batch_size_parm):
+        shape = [batch_size_parm, 2, 3, 3]
         return np.arange(np.prod(shape)).reshape(shape)
 
     train_op = tf.constant(0)
@@ -126,8 +126,8 @@ def test_train_nn(train_nn):
     correct_label = tf.placeholder(tf.float32, name='correct_label')
     keep_prob = tf.placeholder(tf.float32, name='keep_prob')
     learning_rate = tf.placeholder(tf.float32, name='learning_rate')
-    images = tf.placeholder(tf.float32, shape=(None, 160, 576, 3))
-    augment = main.augment_op(images)
+    images = tf.placeholder(tf.float32, shape=(None, 3))
+    augment = tf.zeros(shape=(batch_size, 3, 3))
     with tf.Session() as sess:
         parameters = {
             'sess': sess,
@@ -143,6 +143,7 @@ def test_train_nn(train_nn):
             'augment': augment,
             'images': images}
         _prevent_print(train_nn, parameters)
+        # train_nn(**parameters)
 
 
 @test_safe

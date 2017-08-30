@@ -1,3 +1,4 @@
+from PIL import Image
 import sys
 import os.path
 import time
@@ -9,7 +10,7 @@ import project_tests as tests
 import numpy as np
 
 KEEP_PROB = 0.5
-EPOCHS = 30
+EPOCHS = 40
 BATCH_SIZE = 8
 LEARNING_RATE = 0.0001
 MODEL_VERSION = 2
@@ -121,10 +122,10 @@ tests.test_optimize(optimize)
 
 def augment_op(images):
     def augment_pipeline(img):
-        rand_flip = tf.image.random_flip_left_right(img, seed=13)
-        rand_contrast = tf.image.random_contrast(rand_flip, lower=0.2, upper=1.8, seed=43)
-        rand_bright = tf.image.random_brightness(rand_contrast, max_delta=0.2, seed=14)
-        return rand_bright
+        rand_bright = tf.image.random_brightness(img, max_delta=28.01, seed=13)
+        rand_flip = tf.image.random_flip_left_right(img, seed=14)
+        rand_contrast = tf.image.random_contrast(rand_flip, lower=0.2, upper=1.1, seed=15)
+        return rand_flip
     return tf.map_fn(lambda img: augment_pipeline(img), images)
 
 def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, input_image,
@@ -151,6 +152,12 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
             augmented = sess.run([augment], feed_dict={
                     images: image
                 })
+            if False:
+                Image.fromarray(augmented[0][0].astype('uint8')).show()
+                try:
+                    Image.fromarray(np.asarray(image[0].astype('uint8'))).show()    
+                except Exception:
+                    pass
             _,loss = sess.run([train_op, cross_entropy_loss], feed_dict={
                 input_image: augmented[0],
                 correct_label: image_c,
@@ -161,7 +168,7 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
         print('Epoch {} of {} - Loss: {}'.format(epoch, epochs, loss))
         loss_history.append(loss)
     return loss_history
-# tests.test_train_nn(train_nn)
+tests.test_train_nn(train_nn)
 
 def run():
     global EPOCHS, KEEP_PROB, BATCH_SIZE
