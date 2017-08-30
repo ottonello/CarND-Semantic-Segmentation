@@ -124,6 +124,28 @@ def gen_test_output(sess, logits, keep_prob, image_pl, data_folder, image_shape)
 
         yield os.path.basename(image_file), np.array(street_im)
 
+def process_video(sess, logits, keep_prob, image_pl, image_shape, video_file):
+    from moviepy.editor import VideoFileClip
+    output_video = "solution_video"+ video_file
+
+    def process_image(image):
+        image = scipy.misc.imresize(image, image_shape)
+
+        im_softmax = sess.run(
+            [tf.nn.softmax(logits)],
+            {keep_prob: 1.0, image_pl: [image]})
+        im_softmax = im_softmax[0][:, 1].reshape(image_shape[0], image_shape[1])
+        segmentation = (im_softmax > 0.5).reshape(image_shape[0], image_shape[1], 1)
+        mask = np.dot(segmentation, np.array([[0, 255, 0, 127]]))
+        mask = scipy.misc.toimage(mask, mode="RGBA")
+        street_im = scipy.misc.toimage(image)
+        street_im.paste(mask, box=None, mask=mask)
+
+        return np.array(street_im)
+    clip1 = VideoFileClip(os.path.join("data", video_file))
+    output_clip= clip1.fl_image(process_image)
+    output_clip.write_videofile(output_video, audio=False)
+
 
 def save_inference_samples(output_dir, data_dir, sess, image_shape, logits, keep_prob, input_image):
     if os.path.exists(output_dir):
