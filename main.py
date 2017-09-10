@@ -11,7 +11,7 @@ import numpy as np
 KEEP_PROB = 0.5
 EPOCHS = 30
 BATCH_SIZE = 8
-LEARNING_RATE = 0.001
+LEARNING_RATE = 0.0001
 MODEL_VERSION = 3
 PROCESS_VIDEO = True
 WRITE_SUMMARY = False
@@ -191,9 +191,6 @@ def run():
 
         # Create function to get batches
         get_batches_fn = helper.gen_batch_function(os.path.join(data_dir, 'data_road/training'), image_shape)
-
-        # OPTIONAL: Augment Images for better results
-        #  https://datascience.stackexchange.com/questions/5224/how-to-prepare-augment-images-for-neural-network
 
         # Build NN using load_vgg, layers, and optimize function
         correct_label = tf.placeholder(tf.int32)
