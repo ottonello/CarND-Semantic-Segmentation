@@ -162,7 +162,7 @@ def test_for_kitti_dataset(data_dir):
 
 
 @test_safe
-def test_augmentation(augment_op):
+def test_augmentation(augment_op, debug_augmentation=False):
     image_shape = (160, 576)
     def get_img():
         img_path = os.path.join('./data', 'data_road/training/image_2/um_000000.png')
@@ -177,8 +177,7 @@ def test_augmentation(augment_op):
         augmented = sess.run([augment], feed_dict={
             images: image
         })
-        DEBUG_AUGMENTATION = False
-        if DEBUG_AUGMENTATION:
-            Image.fromarray(image[0]).show(title='Original')
+        if debug_augmentation:
+            # Image.fromarray(image[0]).show(title='Original')
             Image.fromarray(augmented[0][0].astype('uint8')).show(title='Augmented')
         # TODO assert output values

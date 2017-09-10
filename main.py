@@ -9,9 +9,9 @@ import project_tests as tests
 import numpy as np
 
 KEEP_PROB = 0.5
-EPOCHS = 15
+EPOCHS = 30
 BATCH_SIZE = 8
-LEARNING_RATE = 0.0001
+LEARNING_RATE = 0.001
 MODEL_VERSION = 3
 PROCESS_VIDEO = True
 WRITE_SUMMARY = False
@@ -104,7 +104,7 @@ def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
     Build the TensorFLow loss and optimizer operations.
     :param nn_last_layer: TF Tensor of the last layer in the neural network
     :param correct_label: TF Placeholder for the correct label image
-    :param learning_rate: TF Placeholder for the learning rate
+    :param learning_rate: TF Placeholder for the leartning rate
     :param num_classes: Number of classes to classify
     :return: Tuple of (logits, train_op, cross_entropy_loss)
     """
@@ -120,11 +120,13 @@ tests.test_optimize(optimize)
 
 def augment_op(images):
     def augment_pipeline(img):
-        rand_flip = tf.image.random_flip_left_right(img, seed=13)
-        rand_bright = tf.image.random_brightness(rand_flip, max_delta=8.01)
-        rand_contrast = tf.image.random_contrast(rand_bright, lower=0.5, upper=1.1)
-        
-        return rand_contrast
+        rand_flip = tf.image.random_flip_left_right(img)
+        rand_bright = tf.image.random_brightness(rand_flip, max_delta=100.0)
+        rand_contrast = tf.image.random_contrast(rand_bright, lower=0.1, upper=1.1)
+        max_val = tf.minimum(rand_contrast, 255.0)
+        min_val = tf.maximum(max_val, 0.0)
+
+        return max_val
     return tf.map_fn(lambda img: augment_pipeline(img), images)
 # Test will fail with no data
 # tests.test_augmentation(augment_op)
