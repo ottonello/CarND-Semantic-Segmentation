@@ -6,11 +6,13 @@ import scipy.misc
 import shutil
 import zipfile
 import tensorflow as tf
-import matplotlib.pyplot as plt
 from glob import glob
 from urllib.request import urlretrieve
 from tqdm import tqdm
 
+import matplotlib
+# matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 class DLProgress(tqdm):
     last_block = 0

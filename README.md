@@ -1,6 +1,9 @@
-# Semantic Segmentation
+# Semantic Segmentation Using Fully Convolutional Networks
 ### Introduction
-In this project, you'll label the pixels of a road in images using a Fully Convolutional Network (FCN).
+This project makes use of a Fully Convolutional Network (FCN) to perform
+semantic segmentation on the image of a road. The model will take any number of
+classes, but the training mentioned here is done with two labels('road' and 'not road').
+
 
 ### Setup
 ##### Frameworks and Packages
@@ -12,22 +15,34 @@ Make sure you have the following is installed:
 ##### Dataset
 Download the [Kitti Road dataset](http://www.cvlibs.net/datasets/kitti/eval_road.php) from [here](http://www.cvlibs.net/download.php?file=data_road.zip).  Extract the dataset in the `data` folder.  This will create the folder `data_road` with all the training a test images.
 
-### Start
-##### Implement
-Implement the code in the `main.py` module indicated by the "TODO" comments.
-The comments indicated with "OPTIONAL" tag are not required to complete.
-##### Run
-Run the following command to run the project:
-```
-python main.py
-```
-**Note** If running this in Jupyter Notebook system messages, such as those regarding test status, may appear in the terminal rather than the notebook.
+### Implementation
+The model is based in a VGG-16 model which is used as the encoder part of the FCN. The 
+fully connected layers are first replaced by one-by-one convolutions in the model, which allows preserving the spatial information.
+The decoder part consists of three convolutional layers, which progressively upsample up to the original image size. Upsampling is performed by using kernel and strides in a way that the resulting convolution is larger than the original. Skip layers are used so that different image block sizes have influence in the results.
 
-### Submission
-1. Ensure you've passed all the unit tests.
-2. Ensure you pass all points on [the rubric](https://review.udacity.com/#!/rubrics/989/view).
-3. Submit the following in a zip file.
- - `helper.py`
- - `main.py`
- - `project_tests.py`
- - Newest inference images from `runs` folder
+Regularization is used to keep the weights at relatively small values, and dropout is used to prevent overfitting.
+
+Below is the final model layers and dimensions:
+
+%TODO IMAGE here
+
+Training
+=======
+The model is trained on the Kitty Road Dataset with about 300 training images. This is not a lot of samples so dataset augmentation will surely help. Employed augmentation tecniques be shown later.
+
+The training is performed with batch size of 8, as larger sizes would use up the available GPU memory.
+After several tests it was found the network doesn't overfit
+
+%TODO COMPLETE
+
+Augmentation
+=======
+Dataset augmentation is performed by altering the brightness and contrast of the training images, as well as flipping them horizontally on a random basis. Later the result is limited to the [0,255] range. For better performance and implementation cleanness Tensorflow Image processing is used directly as part of the training pipeline. The augmentation is performed in the 'augment_op()' method.
+
+Some augmentation samples:
+
+% TODO add images 
+
+Results
+======
+

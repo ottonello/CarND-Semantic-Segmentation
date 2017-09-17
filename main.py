@@ -11,10 +11,10 @@ import numpy as np
 KEEP_PROB = 0.5
 EPOCHS = 30
 BATCH_SIZE = 8
-LEARNING_RATE = 0.0001
+LEARNING_RATE = 1e-4
 MODEL_VERSION = 3
 PROCESS_VIDEO = True
-WRITE_SUMMARY = False
+WRITE_SUMMARY = True
 
 # Check TensorFlow Version
 assert LooseVersion(tf.__version__) >= LooseVersion('1.0'), 'Please use TensorFlow version 1.0 or newer.  You are using {}'.format(tf.__version__)
@@ -54,6 +54,9 @@ tests.test_load_vgg(load_vgg, tf)
 
 def kernel_initializer():
     return tf.truncated_normal_initializer(stddev=0.01)
+
+def kernel_regularizer():
+    return tf.contrib.layers.l2_regularizer(1e-2)
 
 def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     """
@@ -121,15 +124,15 @@ tests.test_optimize(optimize)
 def augment_op(images):
     def augment_pipeline(img):
         rand_flip = tf.image.random_flip_left_right(img)
-        rand_bright = tf.image.random_brightness(rand_flip, max_delta=100.0)
-        rand_contrast = tf.image.random_contrast(rand_bright, lower=0.1, upper=1.1)
-        max_val = tf.minimum(rand_contrast, 255.0)
+        rand_bright = tf.image.random_brightness(rand_flip, max_delta=50.0)
+        rand_contrast = tf.image.random_contrast(rand_bright, lower=0.0, upper=0.5)
+        max_val = tf.minimum(rand_bright, 255.0)
         min_val = tf.maximum(max_val, 0.0)
 
-        return max_val
+        return min_val
     return tf.map_fn(lambda img: augment_pipeline(img), images)
 # Test will fail with no data
-# tests.test_augmentation(augment_op)
+tests.test_augmentation(augment_op, False, True, 15)
 
 def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, input_image,
              correct_label, keep_prob, learning_rate, augment, images):
@@ -152,11 +155,11 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
     loss_history = []
     for epoch in range(epochs):
         for image, image_c in get_batches_fn(batch_size):
-            augmented = sess.run([augment], feed_dict={
-                    images: image
-            })
+            # augmented = sess.run([augment], feed_dict={
+            #         images: image
+            # })
             _,loss = sess.run([train_op, cross_entropy_loss], feed_dict={
-                input_image: augmented[0],
+                input_image: image,
                 correct_label: image_c,
                 keep_prob: KEEP_PROB,
                 learning_rate: LEARNING_RATE

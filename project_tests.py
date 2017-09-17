@@ -162,22 +162,38 @@ def test_for_kitti_dataset(data_dir):
 
 
 @test_safe
-def test_augmentation(augment_op, debug_augmentation=False):
+def test_augmentation(augment_op, debug_augmentation=False, save_images=False, n=1):
     image_shape = (160, 576)
-    def get_img():
-        img_path = os.path.join('./data', 'data_road/training/image_2/um_000000.png')
+    image_files = os.listdir( './data/data_road/training/image_2/')
+    def get_img(filename):
+        img_path = os.path.join('./data/data_road/training/image_2/', filename )
         image = scipy.misc.imresize(scipy.misc.imread(img_path), image_shape)
         return [image]
 
     images = tf.placeholder(tf.float32, shape=(None, 160, 576, 3))
     augment = augment_op(images)
+
     with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
-        image = get_img()
-        augmented = sess.run([augment], feed_dict={
-            images: image
-        })
-        if debug_augmentation:
-            # Image.fromarray(image[0]).show(title='Original')
-            Image.fromarray(augmented[0][0].astype('uint8')).show(title='Augmented')
-        # TODO assert output values
+        for i in range(n):
+            sess.run(tf.global_variables_initializer())
+            img_file = image_files[i]
+            original_image = get_img(img_file)
+            augmented = sess.run([augment], feed_dict={
+                images: original_image
+            })
+            augmented_img = Image.fromarray(augmented[0][0].astype('uint8'))
+            if debug_augmentation:
+                # Image.fromarray(image[0]).show(title='Original')
+                augmented_img.show(title='Augmented')
+            if save_images:
+                img_orig = Image.fromarray(original_image[0])
+
+                split_fliename = os.path.splitext(img_file)
+                width, height = img_orig.size
+                total_width = width*2
+                new_im = Image.new('RGB', (total_width, height))
+
+                new_im.paste(img_orig, (0,0))
+                new_im.paste(augmented_img, (width,0))
+                new_im.save( str(i) + '.png')
+            # TODO assert output values
