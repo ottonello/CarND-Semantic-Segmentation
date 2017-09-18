@@ -7,7 +7,7 @@ classes, but the training mentioned here is done with two labels('road' and 'not
 
 ### Setup
 ##### Frameworks and Packages
-Make sure you have the following is installed:
+Make sure you have the following installed:
  - [Python 3](https://www.python.org/)
  - [TensorFlow](https://www.tensorflow.org/)
  - [NumPy](http://www.numpy.org/)
@@ -24,7 +24,7 @@ Regularization is used to keep the weights at relatively small values, and dropo
 
 Below is the final model layers and dimensions:
 
-%TODO IMAGE here
+![model](https://github.com/ottonello/CarND-Semantic-Segmentation/blob/master/results/graph-run%3D%20(2).png)
 
 Training
 =======
