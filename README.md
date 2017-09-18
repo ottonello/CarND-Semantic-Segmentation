@@ -69,10 +69,12 @@ get right:
 ![model](https://raw.githubusercontent.com/ottonello/CarND-Semantic-Segmentation/master/results/um_000028.png)
 
 It does have problems with the sections of railroad below, possibly there are not enough samples like this in the training examples:
+
 ![model](https://raw.githubusercontent.com/ottonello/CarND-Semantic-Segmentation/master/results/um_000004.png)
 
 As we didn't discriminate other roads when training, sections of road in other places in the image are also labeled as road, this 
 can be seen in these samples:
+
 ![model](https://raw.githubusercontent.com/ottonello/CarND-Semantic-Segmentation/master/results/umm_000016.png)
 ![model](https://raw.githubusercontent.com/ottonello/CarND-Semantic-Segmentation/master/results/um_000002.png)
 
