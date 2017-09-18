@@ -36,6 +36,11 @@ This is not a lot of samples so dataset augmentation will surely help get better
 The training is performed with batch size of 8, as larger sizes would use up the available GPU memory. Training was done with
 learning rate = 1e-4, as larger values would not converge. A dropout probability of 0.5 was used to avoid overfitting. 
 
+The graph below shows the error achieved vs. training epoch:
+![model](https://github.com/ottonello/CarND-Semantic-Segmentation/blob/master/results/_loss_graph.png)
+
+Possibly training could have been interrupted earlier, but 30 epochs seems to give good results for generalization.
+
 Augmentation
 =======
 Dataset augmentation is performed by altering the brightness and contrast of the training images, as well as flipping them horizontally 
@@ -56,3 +61,24 @@ Some augmentation samples:
 Results
 ======
 
+Below are displayed some samples of images labeled with the trained model. In general the network performs well, although some sections
+are confusing for it, for example some darker sections. This could possibly be improved with more augmentation, but tha proved hard to
+get right:
+
+![model](https://raw.githubusercontent.com/ottonello/CarND-Semantic-Segmentation/master/results/um_000016.png)
+![model](https://raw.githubusercontent.com/ottonello/CarND-Semantic-Segmentation/master/results/um_000028.png)
+
+It does have problems with the sections of railroad below, possibly there are not enough samples like this in the training examples:
+![model](https://raw.githubusercontent.com/ottonello/CarND-Semantic-Segmentation/master/results/um_000004.png)
+
+As we didn't discriminate other roads when training, sections of road in other places in the image are also labeled as road, this 
+can be seen in these samples:
+![model](https://raw.githubusercontent.com/ottonello/CarND-Semantic-Segmentation/master/results/umm_000016.png)
+![model](https://raw.githubusercontent.com/ottonello/CarND-Semantic-Segmentation/master/results/um_000002.png)
+
+
+Finally, this is an example of the network processing a small sample video:
+
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=xHVmyw3fCYk" target="_blank">
+<img src="http://img.youtube.com/vi/xHVmyw3fCYk/0.jpg" 
+alt="Video sample 3" width="240" height="180" border="10" /></a>
